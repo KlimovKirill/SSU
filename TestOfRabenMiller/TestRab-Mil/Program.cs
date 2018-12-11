@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
-
-namespace TestOfRabenMiller
+namespace TestRabMil
 {
-    class Program
+    class MainClass
     {
         public static bool Test_Miller_Rabin(ulong n)
         {
@@ -44,11 +39,12 @@ namespace TestOfRabenMiller
             for (ulong i = 0; i < r; i++)
             {
                 //a = r1 + ((ulong)rand.Next() % (r2 - r1));
-                a = (ulong)rand.Next((int)r1,(int)r2 );
+
+                a = (ulong)rand.Next((int)r1, (int)r2);
 
                 // x ← a^t mod n, вычислим с помощью возведения в степень по модулю
                 x = BigInteger.ModPow(a, t, n);
-               
+
                 // если x == 1 или x == n − 1, то перейти на следующую итерацию цикла
                 if (x == 1 || x == n - 1)
                 {
@@ -82,6 +78,7 @@ namespace TestOfRabenMiller
         static void Main(string[] args)
         {
             ulong n;
+
             ulong.TryParse(Console.ReadLine(), out n);
 
             if (Test_Miller_Rabin(n))

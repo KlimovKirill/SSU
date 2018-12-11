@@ -1,0 +1,196 @@
+#include <fstream> 
+#include <map> 
+#include <string> 
+#include <algorithm>
+#include <vector> 
+#include <bitset>
+#include <cmath> 
+
+using namespace std;
+
+void AlpaReading(ifstream &in, map<double, char> &Alphabet)
+{
+	char inpS;
+	double inpI;
+	map <char, double> TempAlphabet;
+	while (in >> inpS)
+	{
+		in >> inpI;
+		TempAlphabet.insert(pair<char, double>(inpS, inpI));
+	}
+
+	for (auto it = TempAlphabet.begin(); it != TempAlphabet.end(); ++it)
+	{
+		while (Alphabet.count(it->second) != 0)
+		{
+			it->second = it->second * 1.000001;
+		}
+		Alphabet.insert(pair<double, char>(it->second, it->first));
+	}
+}
+
+int preFano(vector<pair<char, double>> temp, int begining, int ending, vector<string> &ans)
+{
+	double FirstSum = 0, SecondSum = 0, minSum = 9999;
+	int minSumPos;
+	for (int i = begining; i < ending; i++)
+	{
+		for (int j = begining; j < i; j++)
+			FirstSum = FirstSum + temp[j].second;
+		for (int j = i; j < ending; j++)
+			SecondSum = SecondSum + temp[j].second;
+		if (abs(FirstSum - SecondSum) < minSum)
+		{
+			minSum = abs(FirstSum - SecondSum);
+			minSumPos = i;
+		}
+		FirstSum = 0, SecondSum = 0;
+	}
+
+	for (int i = begining; i < minSumPos; i++)
+		ans[i] = ans[i] + "1";
+	for (int i = minSumPos; i < ending; i++)
+		ans[i] = ans[i] + "0";
+
+	if (minSumPos > 1 && begining != minSumPos)
+	{
+		preFano(temp, begining, minSumPos, ans);
+	}
+	else
+		return 0;
+
+	if (minSumPos != begining)
+		preFano(temp, minSumPos, ending, ans);
+	else
+		return 0;
+}
+
+void Fano(vector<pair<char, double>> temp, vector<string> &ans, ifstream &in, ofstream &out)
+{
+	in.open("text.txt");
+	out.open("code.txt");
+
+	string s;
+	while (getline(in, s))
+	{
+		for (int i = 0; i < s.size(); i++)
+		{
+			s[i] = (char)tolower(s[i]);
+			if (s[i] == ' ')
+			{
+				out << ' ';
+				i++;
+			}
+			for (int j = 0; j < temp.size(); j++)
+				if (s[i] == temp[j].first)
+				{					
+					int sum = 0;
+					for (int ii = ans[j].size() - 1; ii > -1; ii--)
+						if (ans[j][ii] == '1')
+						{
+							sum = sum + pow(2, (int)ans[j].size() - (ii + 1));				
+						}
+					//out << ans[j] << ' ' << sum << ' ' << (char)sum << endl;
+					out << (char)sum;
+					break;
+				}
+		}
+	}
+
+
+	in.close();
+	out.close();
+}
+
+void antiFano()
+{
+	ifstream in;
+	ofstream out;
+	in.open("code.txt");
+	out.open("decode.txt");
+	string s;
+	while (getline(in, s))
+	{
+		for (int i = 0; i < s.size(); i++)
+		{
+			int temp = (int)s[i];
+			int t = 0;
+			string num;
+			do
+			{
+				if (temp % 2)
+					num.push_back('1');
+				else
+					num.push_back('0');
+				temp /= 2;
+			} while (temp != 0);			
+			reverse(num.begin(), num.end());
+			out << num << ' ';
+
+		}
+	}
+
+
+	in.close();
+	out.close();
+}
+
+int main()
+{
+	ifstream in;
+	in.open("input.txt");
+	ofstream out;
+	out.open("output.txt");
+
+	map <double, char> Alphabet;
+	AlpaReading(in, Alphabet);
+
+	vector<pair<char, double>> temp(0);
+	for (auto it = Alphabet.begin(); it != Alphabet.end(); ++it)
+	{
+		temp.push_back(make_pair(it->second, it->first));
+	}
+
+	vector<string> ans(temp.size());
+
+	preFano(temp, 0, temp.size(), ans);
+
+	for (int i = 0; i < temp.size(); i++)
+		out << temp[i].first << ' ' << ans[i] << endl;
+
+	in.close();
+	out.close();
+
+	Fano(temp, ans, in, out);
+	antiFano();
+
+	return 0;
+}
+
+
+a 0.07773
+b 0.01575
+c 0.00945
+d 0.05042
+e 0.15021
+f 0.02626
+g 0.01680
+h 0.08613
+i 0.05252
+j 0.05353
+k 0.00735
+l 0.05777
+m 0.01365
+n 0.07142
+o 0.61974
+p 0.01635
+q 0.01366
+r 0.05777
+s 0.06302
+t 0.10084
+u 0.01890
+v 0.00525
+w 0.03151
+x 0.00010
+y 0.01050
+z 0.01040
