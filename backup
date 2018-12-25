@@ -1,0 +1,196 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Epam.Task6.BackupSystem
+{
+    public class Program
+    {
+        private static string folderForBackup = "BackupFiles";
+
+        private static FileSystemWatcher folderWatcher = new FileSystemWatcher();
+
+        public static void DirectoryCopy(string sourceDirName, string destDirName)
+        {
+            DirectoryInfo directory = new DirectoryInfo(sourceDirName);
+
+            if (!directory.Exists)
+            {
+                throw new DirectoryNotFoundException(
+                    "Source directory does not exist or could not be found: "
+                    + sourceDirName);
+            }
+
+            DirectoryInfo[] directories = directory.GetDirectories();
+
+            if (!Directory.Exists(destDirName))
+            {
+                Directory.CreateDirectory(destDirName);
+            }
+
+            FileInfo[] files = directory.GetFiles();
+            foreach (FileInfo file in files)
+            {
+                string temppath = Path.Combine(destDirName, file.Name);
+                file.CopyTo(temppath, false);
+            }
+
+            foreach (DirectoryInfo subdirectory in directories)
+            {
+                string temppath = Path.Combine(destDirName, subdirectory.Name);
+                DirectoryCopy(subdirectory.FullName, temppath);
+            }
+
+            Thread.Sleep(1000);
+        }
+
+        public static void ChangeHandler(object source, FileSystemEventArgs e)
+        {
+            string id = DateTime.Now.ToString();
+            for (int i = 0; i < id.Length; i++)
+            {
+                if (char.IsSeparator(id[i]) || id[i] == ':' || id[i] == '.')
+                {
+                    id = id.Remove(i, 1);
+                }
+            }
+
+            DirectoryCopy(folderWatcher.Path, $"BackupFiles\\{id}");
+        }
+
+        public static void Watching()
+        {
+            Directory.CreateDirectory(folderForBackup);
+
+            Console.Write("Enter path: ");
+            folderWatcher.Path = Console.ReadLine();
+            using (StreamWriter sw = new StreamWriter("WatchingFolder.txt"))
+            {
+                sw.WriteLine(folderWatcher.Path);
+            }
+
+            folderWatcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite
+           | NotifyFilters.FileName | NotifyFilters.DirectoryName;
+            folderWatcher.Filter = "*.txt";
+
+            folderWatcher.Changed += new FileSystemEventHandler(ChangeHandler);
+            folderWatcher.Created += new FileSystemEventHandler(ChangeHandler);
+            folderWatcher.Deleted += new FileSystemEventHandler(ChangeHandler);
+            folderWatcher.Renamed += new RenamedEventHandler(ChangeHandler);
+
+            folderWatcher.IncludeSubdirectories = true;
+            folderWatcher.EnableRaisingEvents = true;
+        }
+
+        public static void Backuping()
+        {
+            Console.Write("Enter date and time of backup in format DD.MM.YYYY HH:MM:SS: ");
+            string datime = DateReader();
+            for (int i = 0; i < datime.Length; i++)
+            {
+                if (char.IsSeparator(datime[i]) || datime[i] == ':' || datime[i] == '.')
+                {
+                    datime = datime.Remove(i, 1);
+                }
+            }
+
+            DirectoryInfo dir = new DirectoryInfo(folderForBackup);
+            DirectoryInfo[] dirs = dir.GetDirectories();
+
+            long backup_id = long.MaxValue;
+            string backup_path = string.Empty;
+            for (int i = 0; i < dirs.Length; i++)
+            {
+                if (long.Parse(dirs[i].Name) - long.Parse(datime) < backup_id && long.Parse(dirs[i].Name) - long.Parse(datime) >= 0)
+                {
+                    backup_id = long.Parse(dirs[i].Name) - long.Parse(datime);
+                    backup_path = dirs[i].FullName;
+                }
+            }
+
+            string mainPath;
+            using (StreamReader sr = new StreamReader("WatchingFolder.txt"))
+            {
+                mainPath = sr.ReadLine();
+            }
+
+            dir = new DirectoryInfo(mainPath);
+            dirs = dir.GetDirectories();
+            if (dirs.Length != 0)
+            {
+                for (int i = 0; i < dirs.Length; i++)
+                {
+                    dirs[i].Delete(true);
+                }
+            }
+
+            var files = dir.GetFiles();
+            if (files.Length != 0)
+            {
+                for (int i = 0; i < files.Length; i++)
+                {
+                    files[i].Delete();
+                }
+            }
+
+            DirectoryCopy(backup_path, mainPath);
+        }
+
+        public static string DateReader()
+        {
+            string inp_date = Console.ReadLine();
+            DateTime temp = new DateTime();
+            try
+            {
+                temp = DateTime.Parse(inp_date);
+            }
+            catch
+            {
+                Console.WriteLine("Wrond format. Try again");
+                DateReader();
+            }
+
+            return temp.ToString();
+        }
+
+        public static void Main(string[] args)
+        {
+            try
+            {
+                Console.WriteLine($"Welcome to Backup System!{Environment.NewLine}" +
+                    $"For starting Watching - press W{Environment.NewLine}"+
+                    $"For starting Backup - press B");
+
+                string input = Console.ReadLine().ToUpper();
+
+                while (input != "B" && input != "W")
+                {
+                    Console.Write("Wrong input data. Enter B or W: ");
+                    input = Console.ReadLine().ToUpper();
+                }
+
+                if (input == "W")
+                {
+                    Watching();
+                }
+                else if (input == "B")
+                {
+                    Backuping();
+                }
+            }
+            catch
+            {
+                Console.WriteLine("You have started backuping before watching or entered wrong path!");
+            }
+
+            Console.WriteLine("Press S to stop");
+            while (Console.ReadLine().ToUpper() != "S")
+            {
+            }
+        }
+    }
+}
