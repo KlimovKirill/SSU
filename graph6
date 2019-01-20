@@ -1,0 +1,33 @@
+        static int[,] fromgraph6(string graph)
+        {
+            int n = (int)graph[0] - 63;
+
+            int[,] mat = new int[n, n];
+            int x = 0, y = 1;
+            for (int i = 1; i < graph.Length; i++)
+            {
+                string temp = Convert.ToString((int)graph[i] - 63, 2);
+                if (temp.Length < 6)
+                {
+                    while (temp.Length != 6)
+                    {
+                        temp = '0' + temp;
+                    }
+                }
+               
+                for (int j = 0; j < temp.Length; j++)
+                {
+                    mat[x, y] = temp[j] - 48;
+                    mat[y,x] = temp[j] - 48;
+                    x++;
+                    if (x == y)
+                    {
+                        x = 0;
+                        y++;
+                        if (y == n)
+                            return mat;
+                    }
+                }
+            }
+            return mat;
+        }
