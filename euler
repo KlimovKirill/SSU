@@ -1,0 +1,85 @@
+using System; 
+using System.Collections.Generic; 
+using System.Linq; 
+using System.Text; 
+using System.Threading.Tasks; 
+
+namespace ConsoleApp2 
+{ 
+class Program 
+{ 
+static int n = 0; 
+static int[,] z = new int[100, 100]; // = fromgraph6(input) !!! 
+
+static List<int> path = new List<int>(); 
+
+static void fleury(int idx) 
+{ 
+for (int i = 0; i < n; i++) 
+while (z[idx, i] > 0) 
+{ 
+z[idx, i]--; 
+z[i, idx]--; 
+
+fleury(i); 
+} 
+path.Add(idx); 
+} 
+
+
+static void Main(string[] args) 
+{ 
+int m = int.Parse(Console.ReadLine()); 
+int n = int.Parse(Console.ReadLine()); 
+
+List<int> d = new List<int>(n); 
+
+for (int i = 0; i < m; i++) 
+{ 
+
+d[a]++, d[b]++;//если на пересечении аб - 1, то d[a] и d[b] по 
+} 
+
+bool found = false; 
+int odd = 0; 
+
+for (int i = 0; i < n; i++) 
+{ 
+if (d[i] % 2 == 1) 
+{ 
+if (!found) 
+fleury(i); 
+found = true; 
+odd++; 
+} 
+} 
+
+if (odd > 2) 
+path.Clear(); 
+
+if (!found) 
+{ 
+for (int i = 0; i < n; i++) 
+{ 
+if (d[i] > 0) 
+{ 
+fleury(i); 
+found = true; 
+break; 
+} 
+} 
+} 
+
+if (!found || path.Count() != m + 1) 
+
+Console.WriteLine("-1"); 
+else 
+{ 
+Console.WriteLine(path.Count()); 
+for (int i = 0; i < path.Count(); i++) 
+Console.Write($"{path[i] + 1} "); 
+} 
+
+} 
+} 
+}
